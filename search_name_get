@@ -1,0 +1,172 @@
+import re
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+
+text = """Afghanistan阿富汗(AFG) Albania阿尔巴尼亚(ALB)
+Algeria阿尔及利亚(ALG) Andorra安道尔(AND)
+Angola安果拉(ANG) Armenia亚美尼亚(ARM)
+Argentina阿根廷(ARG) Aruba 阿鲁巴岛(ARU)
+Australia澳大利亚(AUS) Austria奥地利(AUT)
+Azerbaijan阿塞拜疆(AZE) Bangladesh孟加拉国 (BAN)
+Barbados巴巴多斯(BAR) Bahrain巴林(BRN)
+Belarus白俄罗斯(BLR) Belgium比利时(BEL)
+Bermuda百慕大(BER) Bolivia玻利维亚(BOL)
+Bosnia and Herzegovina波斯尼亚-黑塞哥维那(BIH)
+Botswana博茨瓦纳(BOT) Brazil巴西(BRA)
+Brunei文莱(BRU) Brit. Virgin Islands英属维尔京群岛 (IVB)
+Bulgaria保加利亚(BUL) Canada加拿大(CAN)
+Chile智利(CHI) China中国(CHN)
+Colombia哥伦比亚(COL) Costa Rica哥斯达黎加(CRC)
+Croatia克罗地亚(CRO) Cuba古巴(CUB)
+Cyprus塞浦路斯(CYP) Czech Republic捷克共和国(CZE)
+Denmark丹麦(DEN) Dominican Republic多米尼加(DOM)
+Egypt埃及(EGY) Ecuador厄瓜多尔(ECU)
+England英格兰(ENG) Estonia爱沙尼亚(EST)
+Ethiopia埃塞俄比亚 (ETH) Faroe Islands法罗群岛(FAI)
+Finland芬兰(FIN) France法国(FRA)
+FYR Macedonia马其顿(MKD) Georgia格鲁吉亚(GEO)
+Germany德国(GER) Greece希腊(GRE)
+Guernsey 根西[(GCI) Honduras洪都拉斯(HON)
+Hong Kong香港(HKG) Hungary匈牙利(HUN)
+India印度(IND) Ireland爱尔兰(IRL)
+Iraq伊拉克(IRQ)
+Italy意大利(ITA) Iceland冰岛(ISL)
+Indonesia印度尼西亚(INA) Israel以色列(ISR)
+Ivory Coast象牙海岸(CIV) Jamaica牙买加(JAM)
+Japan日本(JPN) Jersey 泽西岛(JCI)
+Kazakhstan哈萨克斯坦(KAZ) Kenya肯尼亚(KEN)
+Kyrgyzstan 塔吉克斯坦 (KGZ) Latvia拉脱维亚(LAT)
+Lebanon黎巴嫩(LIB) Libya利比亚(LBA)
+Liechtenstein列支敦士登(LIE) Lithuania立陶宛(LTU)
+Luxembourg卢森堡(LUX) Macau澳门(MAC)
+Malawi马拉维(MAW) Malaysia马来西亚(MAS)
+Malta马尔他(MLT) Mauritius毛利求斯(MRI)
+Mexico墨西哥 (MEX) Monaco摩纳哥(MNC)
+Mongolia蒙古(MGL) Morocco摩洛哥(MAR)
+Namibia 纳米比亚 (NAM) Netherlands荷兰(NED)
+Netherlands Antilles 荷属安的列斯 (AHO) New Zealand新西兰(NZL)
+Nicaragua尼加拉瓜(NCA)
+Norway挪威(NOR) Palestine巴勒斯坦(PLE)
+Panama巴拿马(PAN) Papua New Guinea巴布亚新几内亚(PNG)
+Paraguay巴拉圭(PAR) Peru秘鲁 (PER)
+Philippines菲律宾(PHI) Poland波兰(POL)
+Portugal葡萄牙(POR) Qatar卡塔尔(QAT)
+Romania罗马尼亚(ROM) Russia俄罗斯(RUS)
+Rwanda卢旺达(RWA) San Marino圣马力诺(SMR)
+Scotland苏格兰(SCO) Serbia塞尔维亚(SRB)
+Seychelles塞舌尔 (SEY) Singapore新加坡(SIN)
+Slovakia斯洛伐克(SVK) Slovenia斯洛文尼亚(SLO)
+Somalia索马里 (SOM) South Africa南非 (RSA)
+Spain西班牙(ESP) Sri Lanka斯里兰卡(SRI)
+Sudan苏丹(SUD) Surinam苏里南(SUR)
+Sweden瑞典(SWE) Switzerland瑞士(SUI)
+Syria叙利亚(SYR) Tajikistan塔吉克斯坦(TJK)
+Thailand泰国(THA) Trinidad and Tobago特立尼达和多巴哥(TRI)
+Tunesia 突尼斯(TUN) Turkey土尔其(TUR)
+Turkmenistan土库曼斯坦(TKM) Uganda乌干达(UGA)
+Ukraine乌克兰(UKR) United Arab Emirates阿拉伯联合酋长国 (UAE)
+United States美国(USA) Uruguay乌拉圭(URU)
+US Virgin Islands 美属维京群岛; (ISV) Uzbekistan乌兹别克斯坦(UZB)
+Wales威尔士(WLS) Venezuela委内瑞拉(VEN)
+Vietnam越南(VIE) Yemen也门(YEM)
+Yugoslavia南斯拉夫(YUG) Zambia赞比亚(ZAM)
+Zimbabwe津巴布韦(ZIM) Iran,伊朗（irn）
+South Korea韩国（kor）Senegal塞内加尔（sen）
+尼日利亚（nig） Saudi Arabia沙特阿拉伯（ksa）土耳其（TUR）北爱尔兰（NIR）黑山（MNE）捷克（CZE）摩尔多瓦（MDA）佛得角（CPV）中国香港（HKG）中国澳门（MAC） 阿联酋（AFC）科威特（KWT）刚果（COG）
+乍得（TCD）阿曼（OMN） 约旦（JOR）加纳（GHA）朝鲜（PRK）东帝汶（TLS）乌兹别克（UZB）巴林(BHR)马里(MLI) 坦桑尼亚(TZA) 波黑(BIH) 罗马尼亚(ROU) 拉脱维亚(LVA) 阿美尼亚（ARM）
+赤道几内亚(GNQ) 利比亚(LBY) 摩洛哥(MAR) 加蓬(GAB) 吉尔吉斯斯坦(KGZ) 马耳他(MLT) 斯洛文尼亚（SVN） 威尔士（WAL）"""
+
+path_history = 'data/historical_record.csv'
+history = pd.read_csv(path_history)
+
+a1 = 0
+for i in history['time']:
+    history.loc[a1,'year'] = i.split('/')[0]
+    a1 = a1 +1
+
+history.to_csv(path_history ,encoding='utf-8')
+
+text = text.replace("(", "（")
+text = text.replace(")", "）")
+b = text.split('）')
+result = []
+list_chinese_name = []
+list_search_name = []
+for i in b[:-1]:
+  name = i.split('（')
+  chinese_name = name[0].strip('\n')
+  search_name = name[1].lower()
+  filtrate = re.compile(u'[^\u4E00-\u9FA5]')  # 非中文
+  chinese_name = filtrate.sub(r'', chinese_name)  # replace
+  list_chinese_name.append(chinese_name)
+  list_search_name.append(search_name)
+
+result = dict(map(lambda x,y:[x,y],list_chinese_name,list_search_name))
+
+path_history = 'data/historical_record.csv'
+history = pd.read_csv(path_history)
+
+history['home_rank'] = 0
+history['visiting_rank'] = 0
+home_team = history['home_team']
+visiting_team = history['visiting_team']
+result_game =  history['result']
+
+
+b1 = 0
+c1 = 0
+for home in home_team:
+  try:
+    home_url = 'http://www.fifa.com/fifa-world-ranking/associations/association=%s/men/index.html'%result[home]
+    r = requests.get(home_url,params={'wd': 'python'})
+    soup = BeautifulSoup(r.text,'lxml')
+    result_home = []
+    i = 2023 - history.loc[b1,'year']
+    a = soup.select('#rnk_%s'%i)
+           # print (a)
+    for info in a:
+      d = []
+      b = info.find_all('td')
+      for b_i in b[1:3]:
+          c =b_i.text
+          d.append(c)
+          result_home.append(d)
+
+    history.loc[b1,'home_rank'] = result_home[0][0]
+    b1 = b1 + 1
+    print('%s:增加主队%s排名%s成功'%(b1,home,result_home[0][0]))
+  except:
+    b1 = b1 + 1
+    print('%s:主队查询失败，怀疑非国家球队：%s'%(b1,home))
+    continue
+
+for visiting in visiting_team:
+    try:
+      visiting_url = 'http://www.fifa.com/fifa-world-ranking/associations/association=%s/men/index.html' % result[visiting]
+      r = requests.get(visiting_url, params={'wd': 'python'})
+      soup = BeautifulSoup(r.text, 'lxml')
+      result_visiting = []
+      i = 2023 - history.loc[c1, 'year']
+      a = soup.select('#rnk_%s' % i)
+      # print (a)
+      for info in a:
+        d = []
+        b = info.find_all('td')
+        for b_i in b[1:3]:
+          c = b_i.text
+          d.append(c)
+          result_visiting.append(d)
+
+      history.loc[c1, 'visiting_rank'] = result_visiting[0][0]
+      c1 = c1 + 1
+      print('%s:增加客队%s排名%s成功' % (c1,visiting, result_visiting[0][0]))
+    except:
+      c1 = c1 + 1
+      print('%s:主队查询失败，怀疑非国家球队：%s' % (c1,visiting))
+      continue
+
+history.to_csv(path_history ,encoding='utf-8')
+print('结束')
+
+
